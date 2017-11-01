@@ -12,6 +12,7 @@ const { findNext, findPrev } = sourceSearchUtils;
 import { isWasm, lineToWasmOffset, wasmOffsetToLine } from "../wasm";
 
 import { SourceEditor, SourceEditorUtils } from "devtools-source-editor";
+// import "codemirror/keymap/vim";
 
 import type { AstPosition, AstLocation } from "../../workers/parser/types";
 import type { EditorPosition, EditorRange } from "../editor/types";
@@ -52,10 +53,11 @@ function createEditor() {
   }
 
   return new SourceEditor({
+    // keyMap: "vim",
     mode: "javascript",
     foldGutter: isEnabled("codeFolding"),
     enableCodeFolding: isEnabled("codeFolding"),
-    readOnly: true,
+    readOnly: false,
     lineNumbers: true,
     theme: "mozilla",
     styleActiveLine: false,
