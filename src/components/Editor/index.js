@@ -58,6 +58,8 @@ import { resizeBreakpointGutter, resizeToggleButton } from "../../utils/ui";
 import "./Editor.css";
 import "./Highlight.css";
 
+let WRITE_COUNT__ = 0;
+
 const cssVars = {
   searchbarHeight: "var(--editor-searchbar-height)",
   secondSearchbarHeight: "var(--editor-second-searchbar-height)",
@@ -288,8 +290,7 @@ class Editor extends PureComponent<Props, State> {
       // to keep webpack from messing up our require, we eval the require
       const { OS } = eval('require("resource://gre/modules/osfile.jsm")');
 
-      let WRITE_COUNT__ = 0;
-      function writeToUrlIfFile(url, text) {
+      const writeToUrlIfFile = (url, text) => {
         const path = url.replace(/^file:\/\//, "");
         if (url != path) {
           // //debounce
@@ -300,10 +301,19 @@ class Editor extends PureComponent<Props, State> {
               const array = encoder.encode(text);
 
               OS.File.writeAtomic(path, array);
+
+              let eventData = { detail: { src: text, path } };
+              this.props.evaluateExpression({
+                input: `window.dispatchEvent(new CustomEvent("__internal_devtools_write_file", ${JSON.stringify(
+                  eventData
+                )}))`
+              });
+            } else {
+              // this.props.evaluateExpression({ input: `console.log('wc: ${WRITE_COUNT__} , index: ${writeIndex}')` })
             }
-          }, 300);
+          }, 200);
         }
-      }
+      };
 
       const text = this.state.editor.getText();
       writeToUrlIfFile(this.props.selectedLocation.url || "", text);

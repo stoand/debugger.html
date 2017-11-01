@@ -91,7 +91,7 @@ export function evaluateExpressions() {
   };
 }
 
-function evaluateExpression(expression: Expression) {
+export function evaluateExpression(expression: Expression) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
     if (!expression.input) {
       console.warn("Expressions should not be empty");
