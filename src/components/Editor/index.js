@@ -283,19 +283,21 @@ class Editor extends PureComponent<Props, State> {
       // Focus into editor's text area
       textArea.focus();
     } else {
+      // HACKY STUFF HERE!!!
+
       // to keep webpack from messing up our require, we eval the require
       const { OS } = eval('require("resource://gre/modules/osfile.jsm")');
 
       let WRITE_COUNT__ = 0;
       function writeToUrlIfFile(url, text) {
-        let path = url.replace(/^file:\/\//, "");
+        const path = url.replace(/^file:\/\//, "");
         if (url != path) {
           // //debounce
-          let writeIndex = ++WRITE_COUNT__;
+          const writeIndex = ++WRITE_COUNT__;
           setTimeout(() => {
             if (writeIndex == WRITE_COUNT__) {
-              let encoder = new TextEncoder(); // This encoder can be reused for several writes
-              let array = encoder.encode(text);
+              const encoder = new TextEncoder(); // This encoder can be reused for several writes
+              const array = encoder.encode(text);
 
               OS.File.writeAtomic(path, array);
             }
@@ -303,7 +305,7 @@ class Editor extends PureComponent<Props, State> {
         }
       }
 
-      let text = this.state.editor.getText();
+      const text = this.state.editor.getText();
       writeToUrlIfFile(this.props.selectedLocation.url || "", text);
     }
   }
