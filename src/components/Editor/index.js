@@ -289,34 +289,44 @@ class Editor extends PureComponent<Props, State> {
 
       // to keep webpack from messing up our require, we eval the require
       const { OS } = eval('require("resource://gre/modules/osfile.jsm")');
+      let currentWrite = undefined;
 
-      const writeToUrlIfFile = (url, text) => {
+      let log = text =>
+        this.props.evaluateExpression({ input: `console.log('${text}')` });
+
+      const writeToUrlIfFile = url => {
         const path = url.replace(/^file:\/\//, "");
         if (url != path) {
           // //debounce
           const writeIndex = ++WRITE_COUNT__;
+
           setTimeout(() => {
             if (writeIndex == WRITE_COUNT__) {
+              let text = this.state.editor.getText();
               const encoder = new TextEncoder(); // This encoder can be reused for several writes
               const array = encoder.encode(text);
 
-              OS.File.writeAtomic(path, array);
+              currentWrite = OS.File.writeAtomic(path, array);
 
               let eventData = { detail: { src: text, path } };
               this.props.evaluateExpression({
-                input: `window.dispatchEvent(new CustomEvent("__internal_devtools_write_file", ${JSON.stringify(
-                  eventData
-                )}))`
+                input:
+                  "window.__internal_devtools_write_file && window.__internal_devtools_write_file()"
+                // input: `window.dispatchEvent(new CustomEvent("__internal_devtools_write_file", ${JSON.stringify(
+                //   eventData
+                // )}))`
               });
             } else {
               // this.props.evaluateExpression({ input: `console.log('wc: ${WRITE_COUNT__} , index: ${writeIndex}')` })
             }
-          }, 200);
+          }, 300);
         }
       };
 
-      const text = this.state.editor.getText();
-      writeToUrlIfFile(this.props.selectedLocation.url || "", text);
+      let filePath =
+        this.props.selectedLocation.url ||
+        this.props.pendingSelectedLocation.url;
+      writeToUrlIfFile(filePath);
     }
   }
 
@@ -657,6 +667,8 @@ export default connect(
     const sourceId = selectedSource ? selectedSource.get("id") : "";
     return {
       selectedLocation: getSelectedLocation(state),
+      pendingSelectedLocation:
+        state.sources && state.sources.pendingSelectedLocation,
       selectedSource,
       searchOn: getActiveSearch(state) === "file",
       hitCount: getHitCountForSource(state, sourceId),
